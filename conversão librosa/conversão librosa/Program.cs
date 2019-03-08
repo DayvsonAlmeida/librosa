@@ -26,7 +26,7 @@ namespace conversão_librosa{
     }
 
     class Spectrum{
-    	public static double[] get_window(int len){
+    	public static double[] Get_window(int len){
             double[] window;
             window = new double [len];
             for (int i = 0; i < len; i++)
@@ -39,12 +39,16 @@ namespace conversão_librosa{
 
     }
     class util{
-        public static double[] pad_center(double[] data, int size){
+        public static double[] Pad_center(double[] data, int size){
             double[] new_window;
             new_window = new double[size];
             int start = (new_window.Length - data.Length) / 2;
             Array.Copy(data, 0, new_window, start, data.Length);
             return new_window;
+        }
+
+        public static double[][] Frame(){
+            return null;
         }
     }
 }

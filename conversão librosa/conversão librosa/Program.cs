@@ -9,9 +9,18 @@ namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
             double []window;
-            window = Spectrum.get_window(2048);
+            window = Spectrum.get_window(10);
             for(int i=0; i<10; i++)
-                Console.Write(window[i].ToString()+", ");
+                Console.Write(window[i].ToString()+"| ");
+            Console.Write("\nResizing...\n");
+
+            int size = 12;
+            
+            double[] new_window;
+            new_window = util.pad_center(window, size);
+            for (int i = 0; i < size; i++)
+                Console.Write(new_window[i].ToString() + "| ");
+
             Console.Read();
         }
     }
@@ -27,5 +36,15 @@ namespace conversão_librosa{
     	private static double point_hann(int n, int N){
             return 0.5 * (1 - Math.Cos((2 * Math.PI * n) / (N - 1)));
     	}
+
+    }
+    class util{
+        public static double[] pad_center(double[] data, int size){
+            double[] new_window;
+            new_window = new double[size];
+            int start = (new_window.Length - data.Length) / 2;
+            Array.Copy(data, 0, new_window, start, data.Length);
+            return new_window;
+        }
     }
 }

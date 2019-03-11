@@ -9,19 +9,24 @@ namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
             double []window;
-            window = Spectrum.get_window(10);
+            window = Spectrum.Get_window(10);
             for(int i=0; i<10; i++)
                 Console.Write(window[i].ToString()+"| ");
             Console.Write("\nResizing...\n");
 
             int size = 12;
-            
             double[] new_window;
-            new_window = util.pad_center(window, size);
-            for (int i = 0; i < size; i++)
-                Console.Write(new_window[i].ToString() + "| ");
-
+            new_window = Util.Pad_center(window, size);
+            var y_frames = Util.Frame(window, 3, 2);
+            
+            for (int i = 0; i < y_frames.GetLength(0); i++){
+                for (int j = 0; j < y_frames.GetLength(1); j++) {
+                    Console.Write(y_frames[i,j].ToString()+" | ");
+                }
+                Console.WriteLine();
+            }
             Console.Read();
+            
         }
     }
 
@@ -38,7 +43,7 @@ namespace conversão_librosa{
     	}
 
     }
-    class util{
+    class Util{
         public static double[] Pad_center(double[] data, int size){
             double[] new_window;
             new_window = new double[size];
@@ -47,8 +52,32 @@ namespace conversão_librosa{
             return new_window;
         }
 
-        public static double[][] Frame(){
-            return null;
+        /// <summary>
+        /// Cria uma perspectiva de janelas a partir de um conjunto de dados. 
+        /// </summary>
+        /// <param name="y">Vetor de origem dos dados</param>
+        /// <param name="frame_length">Comprimento da janela</param>
+        /// <param name="hop_length">Deslocamento entre janelas</param>
+        /// <returns>Uma array 2D com as janelas</returns>
+        public static double[,] Frame(double[] y, int frame_length=2048, int hop_length= 512){
+            if (y.Length < frame_length)
+                return null;
+
+            //Quantidade de Janelas que serão utilizadas [Valor Truncado]
+            var n_frames = 1 + ((y.Length - frame_length) / hop_length);
+
+            double[,] y_frames;
+            y_frames = new double[frame_length,n_frames];
+            //for (int i=0; i<frame_length; i++)
+            //    y_frames[i] = new double [n_frames];
+
+            //Extraindo n_frames Janelas do Time Series y
+            for (int i = 0; i < frame_length; i++){
+                for (int j = 0; j < n_frames; j++){
+                    y_frames[i,j] = y[j * hop_length + i]; //Mapeamento vetor x janela
+                }
+            }
+            return y_frames;
         }
     }
 }

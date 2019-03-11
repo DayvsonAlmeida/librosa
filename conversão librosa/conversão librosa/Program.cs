@@ -14,11 +14,15 @@ namespace conversão_librosa{
                 Console.Write(window[i].ToString()+"| ");
             Console.Write("\nResizing...\n");
 
-            double[] new_window;
+            var saida = Spectrum.DFT(window);
+            for (int i = 0; i < saida.Item1.Length; i++) {
+                Console.WriteLine(saida.Item1.GetValue(i).ToString()+"+"+saida.Item2.GetValue(i).ToString()+"j");
+            }
+            /*double[] new_window;
             new_window = Util.Pad_reflect(window, 3);
             for (int i = 0; i < new_window.Length; i++) {
                 Console.Write(new_window[i].ToString()+" | ");
-            }
+            }*/
             Console.Read();
         }
     }
@@ -40,6 +44,38 @@ namespace conversão_librosa{
             return 0.5 * (1 - Math.Cos((2 * Math.PI * n) / (N - 1)));
     	}
 
+        /// <summary>
+        /// Uma Simples implementação da Discrete Fourier Transform
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="partials"></param>
+        /// <returns></returns>
+        public static Tuple<double[], double[]> DFT(double[] input, int partials = 0)
+        {
+            int len = input.Length;
+            double[] cosDFT = new double[len / 2 + 1];
+            double[] sinDFT = new double[len / 2 + 1];
+
+            if (partials == 0)
+                partials = len / 2;
+
+            for (int n = 0; n <= partials; n++)
+            {
+                double cos = 0.0;
+                double sin = 0.0;
+
+                for (int i = 0; i < len; i++)
+                {
+                    cos += input[i] * Math.Cos(2 * Math.PI * n / len * i);
+                    sin += input[i] * Math.Sin(2 * Math.PI * n / len * i);
+                }
+
+                cosDFT[n] = cos;
+                sinDFT[n] = sin;
+            }
+
+            return new Tuple<double[], double[]>(cosDFT, sinDFT);
+        }
     }
     class Util{
         /// <summary>

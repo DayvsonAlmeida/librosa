@@ -26,11 +26,15 @@ namespace conversão_librosa{
                 Console.WriteLine();
             }
             Console.Read();
-            
         }
     }
 
     class Spectrum{
+        /// <summary>
+        /// Gera uma janela de Hann com o comprimento especificado
+        /// </summary>
+        /// <param name="len">Comprimento da Janela de Hann</param>
+        /// <returns></returns>
     	public static double[] Get_window(int len){
             double[] window;
             window = new double [len];
@@ -44,6 +48,12 @@ namespace conversão_librosa{
 
     }
     class Util{
+        /// <summary>
+        /// Centraliza o array de origem em um array de tamanho size preenchido com zeros 
+        /// </summary>
+        /// <param name="data">Source</param>
+        /// <param name="size">Tamanho do array de saída</param>
+        /// <returns>Um array de tamanho size com o source centralizado com pad preenchido com zeros</returns>
         public static double[] Pad_center(double[] data, int size){
             double[] new_window;
             new_window = new double[size];
@@ -58,7 +68,7 @@ namespace conversão_librosa{
         /// <param name="y">Vetor de origem dos dados</param>
         /// <param name="frame_length">Comprimento da janela</param>
         /// <param name="hop_length">Deslocamento entre janelas</param>
-        /// <returns>Uma array 2D com as janelas</returns>
+        /// <returns>Um array 2D com as janelas</returns>
         public static double[,] Frame(double[] y, int frame_length=2048, int hop_length= 512){
             if (y.Length < frame_length)
                 return null;
@@ -79,5 +89,8 @@ namespace conversão_librosa{
             }
             return y_frames;
         }
+        
+
     }
+
 }

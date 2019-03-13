@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,21 +10,13 @@ using System.Threading.Tasks;
 namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
-            double []window;
-            window = Spectrum.Get_window(10);
+            double[] window = Util.Load2("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
+            /*window = Spectrum.Get_window(10);
             for(int i=0; i<window.Length; i++)
                 Console.Write(window[i].ToString()+"| ");
             Console.Write("\nResizing...\n");
-
-            var saida = Spectrum.DFT(window);
-            for (int i = 0; i < saida.Item1.Length; i++) {
-                Console.WriteLine(saida.Item1.GetValue(i).ToString()+"+"+saida.Item2.GetValue(i).ToString()+"j");
-            }
-            /*double[] new_window;
-            new_window = Util.Pad_reflect(window, 3);
-            for (int i = 0; i < new_window.Length; i++) {
-                Console.Write(new_window[i].ToString()+" | ");
-            }*/
+            */
+            var teste = Spectrum.STFT(window);
             Console.Read();
         }
     }
@@ -50,7 +44,7 @@ namespace conversão_librosa{
         /// <param name="input"></param>
         /// <param name="partials"></param>
         /// <returns></returns>
-        public static Tuple<double[], double[]> DFT(double[] input, int partials = 0)
+        private static Tuple<double[], double[]> DFT(double[] input, int partials = 0)
         {
             int len = input.Length;
             double[] cosDFT = new double[len / 2 + 1];
@@ -75,6 +69,91 @@ namespace conversão_librosa{
             }
 
             return new Tuple<double[], double[]>(cosDFT, sinDFT);
+        }
+
+        public static double[,,] STFT(double[] y, int n_fft=2048, int hop_length=0, int win_length=0, bool center= true){
+            
+            if (win_length <= 0)
+                win_length = n_fft;
+
+            if (hop_length <= 0)
+                hop_length = win_length/4;
+
+            var fft_window = Util.Pad_center(Spectrum.Get_window(win_length), n_fft);
+            
+            //var fft_window = Spectrum.Get_window(win_length);
+            //fft_window = Util.Pad_center(fft_window, n_fft);
+            var fft_window_column = Util.Line_to_Column(fft_window);
+
+            double[] y_local = new double[y.Length];
+            y.CopyTo(y_local,0);
+            if (center)
+                y_local = Util.Pad_reflect(y_local, n_fft/2);
+            
+            var y_frames = Util.Frame(y_local, n_fft, hop_length);
+
+            double[,,] stft_matrix = new double[(1 + n_fft / 2), y_frames.GetLength(1), 2];
+
+            const int MAX_MEM_BLOCK = 262144;
+            int n_columns = (MAX_MEM_BLOCK /(stft_matrix.GetLength(0) * sizeof(double)));
+
+            for (int bl_s = 0; bl_s < stft_matrix.GetLength(1); bl_s += n_columns){
+                var bl_t = Math.Min(bl_s+n_columns, stft_matrix.GetLength(1));
+                var tmp = Util.GetColumns(y_frames, bl_s, bl_t);
+
+
+                //Convolução da Janela de Hann com os Frames
+                for (int pos = 0; pos < fft_window_column.GetLength(0); pos++) {
+                    for (int col = 0; col < tmp.GetLength(1); col++) {
+                        tmp[pos, col] *= fft_window_column[pos, 0];
+                    }
+                }
+
+                
+                //Frames Transformados estão saindo nas linhas
+                var tmp_rfft = Spectrum.RFFT(tmp);
+                    
+                for (int i = 0; i < tmp_rfft.GetLength(0); i++) {
+                    for (int j = bl_s; j < bl_t; j++) {
+                        //DEBUG
+                        //Console.WriteLine("["+i.ToString()+","+j.ToString()+"]   ");
+                        //Parte Real
+                        stft_matrix[i,j, 0] = tmp_rfft[j-bl_s].Item1[i];
+                        //Parte Imaginária
+                        stft_matrix[i, j, 1] = tmp_rfft[j-bl_s].Item2[i];
+                    }
+                }
+            }
+
+            return stft_matrix;
+        }
+
+        //Os Frames estão saindo nas linhas
+        /*  Frames Antes da Transformada
+            [f1][f2][f3]
+            [f1][f2][f3]
+            [f1][f2][f3]
+
+            Frames Depois da Transformada no Python
+            [f1][f2][f3]
+            [f1][f2][f3]
+
+            Frames Depois da Transformada no C#
+            [f1][f1]
+            [f2][f2]
+            [f3][f3]              */
+        private static Tuple<double[], double[]>[] RFFT(double[,] frames) {
+            //Função deve realizar a transformada em cada coluna dos frames passados
+            var current_frame = new double[frames.GetLength(0)];
+            Tuple<double[], double[]>[] output = new Tuple<double[], double[]>[frames.GetLength(1)];
+
+            for (int j = 0; j < frames.GetLength(1); j++) {
+                for (int i = 0; i < frames.GetLength(0); i++)
+                    current_frame[i] = frames[i,j];
+                output[j] = Spectrum.DFT(current_frame);
+            }
+           
+            return output;
         }
     }
     class Util{
@@ -162,7 +241,71 @@ namespace conversão_librosa{
             return y_frames;
         }
         
+        /// <summary>
+        /// Converte um vetor linha para um vetor coluna
+        /// </summary>
+        /// <param name="data">Source</param>
+        /// <returns>Retorna um vetor coluna com os elementos de data</returns>
+        public static double[,] Line_to_Column(double[] data){
+            double[,] new_data;
+            new_data = new double[data.Length, 1];
+            for (int i = 0; i < data.Length; i++)
+                new_data[i, 0] = data[i];
+            return new_data;
+        }
+        
+        /// <summary>
+        /// Faz um slice do source
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public static double[,] GetColumns(double [,] source, int start, int end){
+            int len = source.GetLength(0);
+            int n_columns = end-start;
 
+            double [,] output = new double[len,n_columns];
+
+            for (int i = 0; i < len; i++){
+                for (int j=start; j<end; j++){
+                    output[i, j-start] = source[i, j];
+                }
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static double[] Load2(string path){
+            double[] y;
+            using (var streamReader = new StreamReader(path))
+            {
+                var buffer = default(byte[]);
+                using (var memstream = new MemoryStream())
+                {
+                    streamReader.BaseStream.CopyTo(memstream);
+                    buffer = memstream.ToArray();
+                    int read = buffer.Length;
+                    short[] sampleBuffer = new short[read / 2];
+                    y = new double[sampleBuffer.Length - 22];
+                    Buffer.BlockCopy(buffer, 0, sampleBuffer, 0, read);
+
+
+                    for (int i = 22; i < sampleBuffer.Length; i++)
+                    {
+                        y[i - 22] = (double)sampleBuffer[i] / 32768.0;
+                        i++;
+                    }
+
+                }
+            }
+            return y;
+        }
     }
 
 }

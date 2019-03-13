@@ -70,8 +70,17 @@ namespace conversão_librosa{
 
             return new Tuple<double[], double[]>(cosDFT, sinDFT);
         }
-
-        public static double[,,] STFT(double[] y, int n_fft=2048, int hop_length=0, int win_length=0, bool center= true){
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="y"></param>
+        /// <param name="n_fft"></param>
+        /// <param name="hop_length"></param>
+        /// <param name="win_length"></param>
+        /// <param name="center"></param>
+        /// <returns></returns>
+        public static double[,,] STFT(double[] y, int n_fft=2048, int hop_length=0, int win_length=0, bool center=true){
             
             if (win_length <= 0)
                 win_length = n_fft;
@@ -154,6 +163,33 @@ namespace conversão_librosa{
             }
            
             return output;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="y"></param>
+        /// <param name="n_fft">Default = 2048</param>
+        /// <param name="S"></param>
+        /// <param name="hop_length"></param>
+        /// <param name="power"></param>
+        /// <param name="win_length"></param>
+        /// <param name="center"></param>
+        /// <returns></returns>
+        public static double[,,] _spectrogram(double[] y, ref int n_fft, double[,,] S = null, int hop_length=512, int power=1, int win_length=0, bool center=true){
+            double[,,] S_out;
+            if (S != null){
+                n_fft = 2 * (S.GetLength(0) - 1);
+                S_out = S; 
+            }else{
+                S_out = Spectrum.STFT(y, n_fft, hop_length, win_length, center);
+                for (int i = 0; i < S_out.GetLength(0); i++)
+                    for (int j = 0; j < S_out.GetLength(1); j++) {
+                        S_out[i, j, 0] = Math.Pow(Math.Abs(S_out[i, j, 0]),power);
+                        S_out[i, j, 1] = Math.Pow(Math.Abs(S_out[i, j, 1]),power);
+                    }
+            }
+            return S;
         }
     }
     class Util{

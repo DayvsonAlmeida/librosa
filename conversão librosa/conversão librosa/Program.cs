@@ -12,14 +12,8 @@ namespace conversão_librosa{
         static void Main(string[] args){
             double[] window = Util.Load("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
             int n_fft = 2048;
-            var teste = Spectrum._spectrogram(window, ref n_fft);
-            /*for(int i=0; i<teste.GetLength(1); i++){
-                    Console.Write("("+teste[0,i,0].ToString()+","+teste[0,i,1].ToString()+") ");
-            }
-            */
-            for (int i = 0; i < 350; i++)
-                Console.Write(window[i].ToString()+" ");
-            Console.WriteLine("SHAPE: "+window.Length.ToString());
+            double[,] teste = Spectrum._spectrogram(window, ref n_fft);
+            
             Console.Read();
         }
     }
@@ -179,20 +173,21 @@ namespace conversão_librosa{
         /// <param name="win_length"></param>
         /// <param name="center"></param>
         /// <returns></returns>
-        public static double[,,] _spectrogram(double[] y, ref int n_fft, double[,,] S = null, int hop_length=512, double power=2.0, int win_length=0, bool center=true){
-            double[,,] S_out;
+        public static double[,] _spectrogram(double[] y, ref int n_fft, double[,] S = null, int hop_length=512, double power=2.0, int win_length=0, bool center=true){
+            double[,] S_out;
             if (S != null){
                 n_fft = 2 * (S.GetLength(0) - 1);
                 S_out = S; 
             }else{
-                S_out = Spectrum.STFT(y, n_fft, hop_length, win_length, center);
-                for (int i = 0; i < S_out.GetLength(0); i++)
-                    for (int j = 0; j < S_out.GetLength(1); j++) {
-                        S_out[i, j, 0] = Math.Pow(Math.Abs(S_out[i, j, 0]),power);
-                        S_out[i, j, 1] = Math.Pow(Math.Abs(S_out[i, j, 1]),power);
+                var tmp = Spectrum.STFT(y, n_fft, hop_length, win_length, center);
+                S_out = new double[tmp.GetLength(0),tmp.GetLength(1)];
+                for (int i = 0; i < tmp.GetLength(0); i++)
+                    for (int j = 0; j < tmp.GetLength(1); j++) {
+                        S_out[i, j] = Math.Pow(tmp[i, j, 0], 2) + Math.Pow(tmp[i, j, 1], 2);
+                        S_out[i, j] = Math.Sqrt(tmp[i, j, 0]);
                     }
             }
-            return S;
+            return S_out;
         }
     }
     class Util{

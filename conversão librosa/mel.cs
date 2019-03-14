@@ -10,35 +10,9 @@ namespace Librosa
 
         static void Main(string[] args)
         {
+            double[][] m = Time_frequency.mel(sr:16000,n_fft:2048,n_mels:128);
 
-            //var fon = fft_frequencies();
-            /*foreach (double number in fon)
-            {
-                Console.WriteLine(number);
-            }*/
-            double[] vet = Time_frequency.LinSpace(0, 8000, 128).ToArray<double>();
-            double[] hz = Time_frequency.mel_to_hz(vet);
-
-            /*foreach (double number in hz)
-            {
-                Console.WriteLine(number);
-            }*/
-            /*
-            double[] v = Time_frequency.Arange(1, 9).ToArray<double>();
-            double[] v2 = Time_frequency.Arange(1, 10).ToArray<double>();
-            double[,] res_sub_outer = Time_frequency.subtract_outer(v2,v);
-            //double[] v = res_sub_outer[0];
-            for(int i = 0; i < v2.Length; i++)
-            {
-                for (int j = 0; j < v.Length; j++)
-                {
-                    Console.Write(res_sub_outer[i,j]+" \t");
-
-                }
-                Console.WriteLine(res_sub_outer.GetLength(1));
-            }
-            Console.Read();*/
-            Time_frequency.mel();
+            Console.Read();
 
         }
 
@@ -121,7 +95,7 @@ namespace Librosa
             double min_log_hz = 1000;
             double min_log_mel = (min_log_hz - f_min) / f_sp;
 
-            double logstep = Math.Log(6.4) / 27;            //????????
+            double logstep = Math.Log(6.4) / 27;         
 
             if (frequencies >= min_log_hz)
             {
@@ -167,7 +141,7 @@ namespace Librosa
             double min_log_hz = 1000;
             double min_log_mel = (min_log_hz - f_min) / f_sp;
 
-            double logstep = Math.Log(6.4) / 27; //?????????????????????????????
+            double logstep = Math.Log(6.4) / 27; 
 
             if (mels.Length > 1)
             {
@@ -204,7 +178,7 @@ namespace Librosa
 
             double[] mels = LinSpace(min_mel, max_mel, n_mels).ToArray<double>();
 
-            return mels; // mel_to_hz(mels,htk);
+            return mel_to_hz(mels, htk);
         }
 
         /// <summary>
@@ -380,7 +354,7 @@ namespace Librosa
             }
             return res;
         }
-        
+
         /// <summary>
         ///     Checa se há um canal vazio em algum lugar.   
         /// </summary>
@@ -391,7 +365,7 @@ namespace Librosa
 
             for (int i = 0; i < size; i++)
             {
-                if(v1[i]==0 || v2[i]>0)
+                if (v1[i] == 0 || v2[i] > 0)
                 {
                     vet[i] = true;
                 }
@@ -402,7 +376,7 @@ namespace Librosa
             }
             for (int i = 0; i < size; i++)
             {
-                if (vet[i]==false)
+                if (vet[i] == false)
                 {
                     return false;
                 }
@@ -410,7 +384,7 @@ namespace Librosa
             return true;
 
         }
-        
+
         /// <summary>
         ///     retorna um vetor com os maiores valores do eixo y da matriz
         /// </summary>
@@ -435,6 +409,37 @@ namespace Librosa
             return vet;
 
         }
+
+        /// <summary>
+        /// Escreve o array na tela(apenas para efeito de testes de funcionamento das funções)
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="size"></param>
+        /// <param name="nome"></param>
+        public static void write_array(double[] array, int size, string nome)
+        {
+            Console.WriteLine(nome + ": ");
+            for (int i = 0; i < size; i++)
+            {
+                Console.Write(array[i] + " ");
+            }
+            Console.WriteLine();
+            Console.WriteLine("tamanho: " + size);
+        }
+
+        public static void write_mat(double[,] mat, int x, int y, string nome){
+            Console.WriteLine(nome + ": ");
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    Console.Write(mat[i,j] + " ");
+                }
+            }
+            Console.WriteLine();
+            Console.WriteLine("tamanho: " + x+" "+y);
+        }
+
         /// <summary>
         ///    2/2 função melspectrogram
         /// </summary>
@@ -452,19 +457,20 @@ namespace Librosa
             double[][] weights = new double[n_mels][];
 
             double[] fftfreqs = fft_frequencies().ToArray<double>();
+            //write_array(fftfreqs, fftfreqs.Length, "fftfreqs");
 
-            double[] mel_f = mel_frequencies(n_mels+2);
+            double[] mel_f = mel_frequencies(n_mels:n_mels+2,fmin:fmin,fmax:fmax);
+            //write_array(mel_f, mel_f.Length, "mel_f");
 
             double[] fdiff = diff(mel_f);
+            //write_array(fdiff, fdiff.Length, "fdiff");
 
             double[,] ramps = subtract_outer(mel_f, fftfreqs);
+            //write_mat(ramps, ramps.GetLength(0), ramps.GetLength(1), "ramps");
 
             double[] lower = new double[ramps.GetLength(1)];
             double[] upper = new double[ramps.GetLength(1)];
-
-            Console.WriteLine(n_mels);
-            Console.WriteLine(mel_f.Length);
-            Console.WriteLine(ramps.GetLength(1));
+            
             double zero = 0.0d;
             int tamanho = (int)(1 + (n_fft / 2));
             for (int i = 0; i < n_mels; i++)
@@ -478,25 +484,27 @@ namespace Librosa
                 weights[i] = maximum(zero, minimum(lower,upper));
                 
             }
-            Console.WriteLine(tamanho);
-            Console.Read();
+
 
             if (norm == 1)
             {
-                double[] enorm = new double[mel_f.Length];
-                for (int i = 2; i < mel_f.Length; i++)
+                double[] enorm = new double[n_mels];
+                for (int i = 2; i < n_mels+2; i++)
                 {
-                    enorm[i] = 2.0 / (mel_f[i] - mel_f[i - 2]);
+                    enorm[i-2] = 2.0 / (mel_f[i] - mel_f[i - 2]);
                 }
-                //weights[i] = weights * enorm[:,];
                 for (int i = 0; i < n_mels; i++)
                 {
                     for (int j = 0; j < tamanho; j++)
                     {
-                        weights[i][j] *= enorm[j]; 
+                               
+                        weights[i][j] *= enorm[i];
+                        
                     }
+                    Console.WriteLine();
                 }
             }
+            //Console.WriteLine(weights[127][1021]);
 
             if ((mel_f_check(mel_f, getMaxYOfMatrix(weights, n_mels, tamanho), n_mels))!=true){
                 Console.WriteLine("filtros vazios detectados na base mel-freq.");

@@ -10,22 +10,8 @@ namespace Librosa
 
         static void Main(string[] args)
         {
-            double[] vet = Time_frequency.LinSpace(0, 8000, 128).ToArray<double>();
-            double[] hz = Time_frequency.mel_to_hz(vet);
-           
             double[][] m = Time_frequency.mel(sr:16000,n_fft:2048,n_mels:128);
-            Console.WriteLine("BIRLLL");
-            //for (int i = 0; i < 128; i++)
-            //{
-            //    for (int j = 0; j < 1025; j++)
-            //    {
-            //        if (m[i][j]>0) {
-            //            Console.WriteLine(i + " "+j);
 
-            //        }
-            //    }
-            //}
-            //Console.WriteLine(m[2][10]);
             Console.Read();
 
         }

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
-            double[] window = Util.Load("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
+            double[] window = Util.Load2("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
             int n_fft = 2048;
             double[,] teste = Spectrum._spectrogram(window, ref n_fft);
             
@@ -336,24 +336,6 @@ namespace conversão_librosa{
                         i++;
                     }
 
-                }
-            }
-            return y;
-        }
-
-        public static double[] Load(string path){
-            double[] y;
-            using (WaveFileReader reader = new WaveFileReader(path)){
-                byte[] buffer = new byte[reader.Length];
-                int read = reader.Read(buffer, 0, buffer.Length);
-                short[] sampleBuffer = new short[read / 2];
-                y = new double[sampleBuffer.Length];
-                Buffer.BlockCopy(buffer, 0, sampleBuffer, 0, read);
-                int i = 0;
-                foreach (short a in sampleBuffer)
-                {
-                    y[i] = (double)a / 32768.0;
-                    i++;
                 }
             }
             return y;

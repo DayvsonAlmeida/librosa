@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using NAudio.Wave;
+
 
 namespace conversão_librosa{
     class Program{

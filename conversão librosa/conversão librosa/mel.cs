@@ -5,25 +5,34 @@ using System.Text;
 using System.Threading.Tasks;
 namespace Librosa
 {
-    class Program
+    class mel
     {
 
         static void Main(string[] args)
         {
-            double[][] m = Time_frequency.mel(sr:16000,n_fft:2048,n_mels:128);
+            double[][] m = Time_frequency.mel(sr: 16000, n_fft: 2048, n_mels: 128);
+            for (int i = 0; i < 128; i++)
+            {
+                for (int j = 0; j < 1025; j++)
+                {
+                    Console.Write( m[i][j]);
+                }
+            }
             Console.Read();
+
 
         }
 
 
     }
 
-    class Time_frequency
+    class utils
     {
         public static IEnumerable<double> Arange(double start, int count)
         {
             return Enumerable.Range((int)start, count).Select(v => (double)v);
         }
+
 
         /// <summary>
         ///     Retorna um vetor <double> com espaçamento linear entre o início e o fim especificados
@@ -58,126 +67,6 @@ namespace Librosa
             }
 
             return result;
-        }
-
-        /// <summary>
-        ///     Vetor com espaçamento linear de frequencias
-        /// </summary>
-        /// <param name="sr"></param>
-        /// <param name="n_fft"></param>
-        /// <returns></returns>
-        public static double[] fft_frequencies(double sr = 16000, int n_fft = 2048)
-        {
-
-            return LinSpace(0, sr / 2, (int)(1 + n_fft / 2), true).ToArray<double>();
-
-        }
-
-        /// <summary>
-        ///     hertz para mels (double para double)
-        /// </summary>
-        /// <param name="frequencies"></param>
-        /// <param name="htk"></param>
-        /// <returns></returns>
-        public static double hz_to_mel(double frequencies, bool htk = false)
-        {
-            if (htk)
-            {
-                return 2595 * Math.Log10(1 + frequencies / 700);
-            }
-
-            //numeros magicos pt1
-            double f_min = 0;
-            double f_sp = 200 / 3;
-            double mels = (frequencies - f_min) / f_sp;
-
-            double min_log_hz = 1000;
-            double min_log_mel = (min_log_hz - f_min) / f_sp;
-
-            double logstep = Math.Log(6.4) / 27;         
-
-            if (frequencies >= min_log_hz)
-            {
-                mels = min_log_mel + Math.Log(frequencies / min_log_hz) / logstep;
-            }
-            return mels;
-        }
-
-        /// <summary>
-        ///     mels (vetor de double) para hertz (double) 
-        /// </summary>
-        /// <param name="mels"></param>
-        /// <param name="htk"></param>
-        /// <returns></returns>
-        public static double[] mel_to_hz(double[] mels, bool htk = false)
-        {
-            int i = 0;
-
-            if (htk)
-            {
-                double[] m = new double[mels.Length];
-                foreach (double d in mels)
-                {
-                    double v = 700 * (Math.Pow(10, d / 2595) - 1);
-                    m[i] = v;
-                    i++;
-                }
-                return m;
-            }
-
-            //numeros magicos pt2
-            double f_min = 0;
-            double f_sp = 200 / 3;
-            double[] freqs = new double[mels.Length];
-            foreach (double d in mels)
-            {
-                double v = f_min + f_sp * d;
-                freqs[i] = v;
-                i++;
-            }
-
-
-            double min_log_hz = 1000;
-            double min_log_mel = (min_log_hz - f_min) / f_sp;
-
-            double logstep = Math.Log(6.4) / 27; 
-
-            if (mels.Length > 1)
-            {
-                i = 0;
-                foreach (double d in mels)
-                {
-                    if (d >= min_log_mel)
-                    {
-                        freqs[i] = min_log_hz * Math.Exp(logstep * (mels[i] - min_log_mel));
-                    }
-                    i++;
-                }
-            }
-            /*if (mels >= min_log_mel)
-            {
-                freqs = min_log_hz * Math.Exp(logstep * (mels - min_log_mel));
-            }*/
-
-            return freqs;
-        }
-
-        /// <summary>
-        ///     Vetor de mels
-        /// </summary>
-        /// <param name="n_mels"></param>
-        /// <param name="fmin"></param>
-        /// <param name="fmax"></param>
-        /// <param name="htk"></param>
-        /// <returns></returns>
-        public static double[] mel_frequencies(int n_mels = 128, double fmin = 0, double fmax = 11025, bool htk = false)
-        {
-            double min_mel = hz_to_mel(fmin, htk);
-            double max_mel = hz_to_mel(fmax, htk);
-
-            double[] mels = LinSpace(min_mel, max_mel, n_mels).ToArray<double>();
-
-            return mel_to_hz(mels, htk);
         }
 
         /// <summary>
@@ -355,43 +244,14 @@ namespace Librosa
         }
 
         /// <summary>
-        ///     Checa se há um canal vazio em algum lugar.   
-        /// </summary>
-        /// <returns></returns>
-        public static bool mel_f_check(double[] v1, double[] v2, int size)
-        {
-            bool[] vet = new bool[size];
-
-            for (int i = 0; i < size; i++)
-            {
-                if (v1[i] == 0 || v2[i] > 0)
-                {
-                    vet[i] = true;
-                }
-                else
-                {
-                    vet[i] = false;
-                }
-            }
-            for (int i = 0; i < size; i++)
-            {
-                if (vet[i] == false)
-                {
-                    return false;
-                }
-            }
-            return true;
-
-        }
-
-        /// <summary>
         ///     retorna um vetor com os maiores valores do eixo y da matriz
         /// </summary>
         /// <param name="mat"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public static double[] getMaxYOfMatrix(double[][] mat, int x, int y) {
+        public static double[] getMaxYOfMatrix(double[][] mat, int x, int y)
+        {
             double[] vet = new double[y];
 
             for (int i = 0; i < x; i++)
@@ -426,18 +286,178 @@ namespace Librosa
             Console.WriteLine("tamanho: " + size);
         }
 
-        public static void write_mat(double[,] mat, int x, int y, string nome){
+        public static void write_mat(double[,] mat, int x, int y, string nome)
+        {
             Console.WriteLine(nome + ": ");
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
                 {
-                    Console.Write(mat[i,j] + " ");
+                    Console.Write(mat[i, j] + " ");
                 }
             }
             Console.WriteLine();
-            Console.WriteLine("tamanho: " + x+" "+y);
+            Console.WriteLine("tamanho: " + x + " " + y);
         }
+
+    }
+
+    class Time_frequency
+    {
+
+        /// <summary>
+        ///     Vetor com espaçamento linear de frequencias
+        /// </summary>
+        /// <param name="sr"></param>
+        /// <param name="n_fft"></param>
+        /// <returns></returns>
+        public static double[] fft_frequencies(double sr = 16000, int n_fft = 2048)
+        {
+
+            return utils.LinSpace(0, sr / 2, (int)(1 + n_fft / 2), true).ToArray<double>();
+
+        }
+
+        /// <summary>
+        ///     hertz para mels (double para double)
+        /// </summary>
+        /// <param name="frequencies"></param>
+        /// <param name="htk"></param>
+        /// <returns></returns>
+        public static double hz_to_mel(double frequencies, bool htk = false)
+        {
+            if (htk)
+            {
+                return 2595 * Math.Log10(1 + frequencies / 700);
+            }
+
+            //numeros magicos pt1
+            double f_min = 0;
+            double f_sp = 200 / 3;
+            double mels = (frequencies - f_min) / f_sp;
+
+            double min_log_hz = 1000;
+            double min_log_mel = (min_log_hz - f_min) / f_sp;
+
+            double logstep = Math.Log(6.4) / 27;
+
+            if (frequencies >= min_log_hz)
+            {
+                mels = min_log_mel + Math.Log(frequencies / min_log_hz) / logstep;
+            }
+            return mels;
+        }
+
+        /// <summary>
+        ///     mels (vetor de double) para hertz (double) 
+        /// </summary>
+        /// <param name="mels"></param>
+        /// <param name="htk"></param>
+        /// <returns></returns>
+        public static double[] mel_to_hz(double[] mels, bool htk = false)
+        {
+            int i = 0;
+
+            if (htk)
+            {
+                double[] m = new double[mels.Length];
+                foreach (double d in mels)
+                {
+                    double v = 700 * (Math.Pow(10, d / 2595) - 1);
+                    m[i] = v;
+                    i++;
+                }
+                return m;
+            }
+
+            //numeros magicos pt2
+            double f_min = 0;
+            double f_sp = 200 / 3;
+            double[] freqs = new double[mels.Length];
+            foreach (double d in mels)
+            {
+                double v = f_min + f_sp * d;
+                freqs[i] = v;
+                i++;
+            }
+
+
+            double min_log_hz = 1000;
+            double min_log_mel = (min_log_hz - f_min) / f_sp;
+
+            double logstep = Math.Log(6.4) / 27;
+
+            if (mels.Length > 1)
+            {
+                i = 0;
+                foreach (double d in mels)
+                {
+                    if (d >= min_log_mel)
+                    {
+                        freqs[i] = min_log_hz * Math.Exp(logstep * (mels[i] - min_log_mel));
+                    }
+                    i++;
+                }
+            }
+            /*if (mels >= min_log_mel)
+            {
+                freqs = min_log_hz * Math.Exp(logstep * (mels - min_log_mel));
+            }*/
+
+            return freqs;
+        }
+
+        /// <summary>
+        ///     Vetor de mels
+        /// </summary>
+        /// <param name="n_mels"></param>
+        /// <param name="fmin"></param>
+        /// <param name="fmax"></param>
+        /// <param name="htk"></param>
+        /// <returns></returns>
+        public static double[] mel_frequencies(int n_mels = 128, double fmin = 0, double fmax = 11025, bool htk = false)
+        {
+            double min_mel = hz_to_mel(fmin, htk);
+            double max_mel = hz_to_mel(fmax, htk);
+
+            double[] mels = utils.LinSpace(min_mel, max_mel, n_mels).ToArray<double>();
+
+            return mel_to_hz(mels, htk);
+        }
+
+
+
+        /// <summary>
+        ///     Checa se há um canal vazio em algum lugar.   
+        /// </summary>
+        /// <returns></returns>
+        public static bool mel_f_check(double[] v1, double[] v2, int size)
+        {
+            bool[] vet = new bool[size];
+
+            for (int i = 0; i < size; i++)
+            {
+                if (v1[i] == 0 || v2[i] > 0)
+                {
+                    vet[i] = true;
+                }
+                else
+                {
+                    vet[i] = false;
+                }
+            }
+            for (int i = 0; i < size; i++)
+            {
+                if (vet[i] == false)
+                {
+                    return false;
+                }
+            }
+            return true;
+
+        }
+
+
 
         /// <summary>
         ///    2/2 função melspectrogram
@@ -458,18 +478,18 @@ namespace Librosa
             double[] fftfreqs = fft_frequencies().ToArray<double>();
             //write_array(fftfreqs, fftfreqs.Length, "fftfreqs");
 
-            double[] mel_f = mel_frequencies(n_mels:n_mels+2,fmin:fmin,fmax:fmax);
+            double[] mel_f = mel_frequencies(n_mels: n_mels + 2, fmin: fmin, fmax: fmax);
             //write_array(mel_f, mel_f.Length, "mel_f");
 
-            double[] fdiff = diff(mel_f);
+            double[] fdiff = utils.diff(mel_f);
             //write_array(fdiff, fdiff.Length, "fdiff");
 
-            double[,] ramps = subtract_outer(mel_f, fftfreqs);
+            double[,] ramps = utils.subtract_outer(mel_f, fftfreqs);
             //write_mat(ramps, ramps.GetLength(0), ramps.GetLength(1), "ramps");
 
             double[] lower = new double[ramps.GetLength(1)];
             double[] upper = new double[ramps.GetLength(1)];
-            
+
             double zero = 0.0d;
             int tamanho = (int)(1 + (n_fft / 2));
             for (int i = 0; i < n_mels; i++)
@@ -477,35 +497,36 @@ namespace Librosa
                 weights[i] = new double[tamanho];
                 for (int j = 0; j < ramps.GetLength(1); j++)
                 {
-                    lower[j] = -ramps[i,j]/fdiff[i];
+                    lower[j] = -ramps[i, j] / fdiff[i];
                     upper[j] = ramps[i + 2, j] / fdiff[i];
                 }
-                weights[i] = maximum(zero, minimum(lower,upper));
-                
+                weights[i] = utils.maximum(zero, minimum(lower, upper));
+
             }
 
 
             if (norm == 1)
             {
                 double[] enorm = new double[n_mels];
-                for (int i = 2; i < n_mels+2; i++)
+                for (int i = 2; i < n_mels + 2; i++)
                 {
-                    enorm[i-2] = 2.0 / (mel_f[i] - mel_f[i - 2]);
+                    enorm[i - 2] = 2.0 / (mel_f[i] - mel_f[i - 2]);
                 }
                 for (int i = 0; i < n_mels; i++)
                 {
                     for (int j = 0; j < tamanho; j++)
                     {
-                               
+
                         weights[i][j] *= enorm[i];
-                        
+
                     }
                     Console.WriteLine();
                 }
             }
             //Console.WriteLine(weights[127][1021]);
 
-            if ((mel_f_check(mel_f, getMaxYOfMatrix(weights, n_mels, tamanho), n_mels))!=true){
+            if ((mel_f_check(mel_f, utils.getMaxYOfMatrix(weights, n_mels, tamanho), n_mels)) != true)
+            {
                 Console.WriteLine("filtros vazios detectados na base mel-freq.");
                 Console.WriteLine("Alguns canais podem produzir respostas vazias");
                 Console.WriteLine("tente incrementar a taxa de exemplos (e fmax) ou reduzir n_mels");

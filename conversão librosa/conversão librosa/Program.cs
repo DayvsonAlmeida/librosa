@@ -5,18 +5,21 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
+using NAudio.Wave;
 
 namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
-            double[] window = Util.Load2("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
-            /*window = Spectrum.Get_window(10);
-            for(int i=0; i<window.Length; i++)
-                Console.Write(window[i].ToString()+"| ");
-            Console.Write("\nResizing...\n");
+            double[] window = Util.Load("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
+            int n_fft = 2048;
+            var teste = Spectrum._spectrogram(window, ref n_fft);
+            /*for(int i=0; i<teste.GetLength(1); i++){
+                    Console.Write("("+teste[0,i,0].ToString()+","+teste[0,i,1].ToString()+") ");
+            }
             */
-            var teste = Spectrum.STFT(window);
+            for (int i = 0; i < 350; i++)
+                Console.Write(window[i].ToString()+" ");
+            Console.WriteLine("SHAPE: "+window.Length.ToString());
             Console.Read();
         }
     }
@@ -176,7 +179,7 @@ namespace conversão_librosa{
         /// <param name="win_length"></param>
         /// <param name="center"></param>
         /// <returns></returns>
-        public static double[,,] _spectrogram(double[] y, ref int n_fft, double[,,] S = null, int hop_length=512, int power=1, int win_length=0, bool center=true){
+        public static double[,,] _spectrogram(double[] y, ref int n_fft, double[,,] S = null, int hop_length=512, double power=2.0, int win_length=0, bool center=true){
             double[,,] S_out;
             if (S != null){
                 n_fft = 2 * (S.GetLength(0) - 1);
@@ -342,6 +345,23 @@ namespace conversão_librosa{
             }
             return y;
         }
-    }
 
+        public static double[] Load(string path){
+            double[] y;
+            using (WaveFileReader reader = new WaveFileReader(path)){
+                byte[] buffer = new byte[reader.Length];
+                int read = reader.Read(buffer, 0, buffer.Length);
+                short[] sampleBuffer = new short[read / 2];
+                y = new double[sampleBuffer.Length];
+                Buffer.BlockCopy(buffer, 0, sampleBuffer, 0, read);
+                int i = 0;
+                foreach (short a in sampleBuffer)
+                {
+                    y[i] = (double)a / 32768.0;
+                    i++;
+                }
+            }
+            return y;
+        }
+    }
 }

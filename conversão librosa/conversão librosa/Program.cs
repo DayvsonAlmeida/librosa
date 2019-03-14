@@ -5,19 +5,36 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
+using Librosa;
 
 namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
             double[] window = Util.Load2("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
             int n_fft = 2048;
-            double[,] teste = Spectrum._spectrogram(window, ref n_fft);
-            
             Console.Read();
         }
     }
+    class Spectral{
+        public static double[,] Melspectrogram(double[] y, int sr = 16000, double[,] S = null, int n_fft = 2048, int hop_length = 512, int win_length = 0, bool center = true, double power = 2.0, int n_mels = 128){
+            S = Spectrum._spectrogram(y, ref n_fft);
+            var mel_basis = Librosa.Time_frequency.mel(sr, n_fft, n_mels);
 
+            double[,] output = new double[mel_basis.Length, S.GetLength(1)];
+
+            for (int i = 0; i < mel_basis.Length; i++){
+                for (int j = 0; j < S.GetLength(1); j++){
+                    double tmp = 0.0;
+                    for (int k = 0; k < S.GetLength(0); k++){
+                        tmp += mel_basis[i][k] * S[k,j];
+                    }
+                    output[i, j] = tmp;
+                }
+            }
+
+            return output;
+        }
+    }
     class Spectrum{
         /// <summary>
         /// Gera uma janela de Hann com o comprimento especificado

@@ -3,29 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 namespace Librosa
 {
-    class mel
-    {
-
-        static void Main(string[] args)
-        {
-            double[][] m = Time_frequency.mel(sr: 16000, n_fft: 2048, n_mels: 128);
-            for (int i = 0; i < 128; i++)
-            {
-                for (int j = 0; j < 1025; j++)
-                {
-                    Console.Write( m[i][j]);
-                }
-            }
-            Console.Read();
-
-
-        }
-
-
-    }
-
     class utils
     {
         public static IEnumerable<double> Arange(double start, int count)
@@ -500,7 +480,7 @@ namespace Librosa
                     lower[j] = -ramps[i, j] / fdiff[i];
                     upper[j] = ramps[i + 2, j] / fdiff[i];
                 }
-                weights[i] = utils.maximum(zero, minimum(lower, upper));
+                weights[i] = utils.maximum(zero, utils.minimum(lower, upper));
 
             }
 

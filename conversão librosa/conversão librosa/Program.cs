@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Librosa;
+using FftPack;
 
 namespace LibrosaConv
 {
@@ -41,14 +42,18 @@ namespace LibrosaConv
     }
     class Spectral
     {
-        public static void mfcc(double[] y, int sr = 16000, double[,] S = null, int n_mfcc = 20, int dct_type = 2, string norm = "ortho")
+        public static double[,] mfcc(double[] y, int sr = 16000, double[,] S = null, int n_mfcc = 20, int dct_type = 2, string norm = "ortho")
         {
             if (S == null)
             {
-                //S = Spectrum.power_to_db(Melspectrogram(y:y,sr:sr));
+                S = Spectrum.power_to_db(Melspectrogram(y:y,sr:sr));
             }
-            //return scipy.fftpack.dct(S, axis = 0, type = dct_type, norm = norm)[:n_mfcc]
-
+            double[,] S_DCT2D = FftPack.Transform.DCT2D(S,norm:norm);
+            double[,] out_put = new double[n_mfcc, S_DCT2D.GetLength(1)];
+            for (int i = 0; i < n_mfcc; i++)
+                for (int j = 0; j < S_DCT2D.GetLength(1); j++)
+                    out_put[i, j] = S_DCT2D[i, j];
+            return out_put;
         }
 
         public static double[,] Melspectrogram(double[] y, int sr = 16000, double[,] S = null, int n_fft = 2048, int hop_length = 512, int win_length = 0, bool center = true, double power = 2.0, int n_mels = 128)

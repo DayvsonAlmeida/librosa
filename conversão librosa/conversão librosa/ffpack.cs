@@ -3,21 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MathNet;
+
 
 namespace FftPack{
-    class Program{
-        static void Main(string[] args){
-            double[,] x = { { 0.0, 1.0, 2.0}, {3.0, 4.0, 5.0}, {6.0, 7.0, 8.0}};
-            double[,] y = DCT2D(x, norm:"ortho");
-            for (int i = 0; i < y.GetLength(0); i++){
-                for(int j=0; j<y.GetLength(1); j++)
-                    Console.Write(y[i, j]+" | ");
-                Console.WriteLine();
-            }
-
-            Console.Read();
-        }
+    class Transform{
         // Implementação realizada apenas do tipo 2.
         // TODO: Implementar tipo 1, 3 e 4.
         /// <summary>

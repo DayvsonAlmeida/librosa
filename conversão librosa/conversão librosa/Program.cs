@@ -7,11 +7,34 @@ using System.Text;
 using System.Threading.Tasks;
 using Librosa;
 
-namespace conversão_librosa{
-    class Program{
-        static void Main(string[] args){
-            double[] window = Util.Load2("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
-            int n_fft = 2048;
+namespace LibrosaConv
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("INICIANDO");
+            double[] y = Util.Load2("C:/Users/paulo/Documents/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
+            int sr = 16000;
+
+            var mels = Spectral.Melspectrogram(y: y, sr: sr);
+            for (int i = 0; i < mels.GetLength(0); i++)
+            {
+                for (int j = 0; j < mels.GetLength(1); j++)
+                {
+                    Console.WriteLine(i + " " + j + " " + mels[i, j]);
+                }
+            }
+
+            //var r = Spectrum.power_to_db(Spectral.Melspectrogram(y:y, sr:22050));
+
+            //for (int i = 0; i < r.GetLength(0); i++)
+            //{
+            //    for (int j = 0; j < r.GetLength(1); j++)
+            //    {
+            //        Console.WriteLine(i+" "+j+" "+r[i,j]);
+            //    }
+            //}
             Console.Read();
 
         }
@@ -32,13 +55,7 @@ namespace conversão_librosa{
         {
             S = Spectrum._spectrogram(y, ref n_fft, S, hop_length, power, win_length, center);
             var mel_basis = Librosa.Time_frequency.mel(sr, n_fft, n_mels);
-            //for (int i = 0; i < S.GetLength(0); i++)
-            //{
-            //    for (int j = 0; j < S.GetLength(1); j++)
-            //    {
-            //        Console.WriteLine(i + " " + j + " " + S[i, j]);
-            //    }
-            //}
+
 
             double[,] output = new double[mel_basis.Length, S.GetLength(1)];
 
@@ -50,9 +67,6 @@ namespace conversão_librosa{
                     for (int k = 0; k < S.GetLength(0); k++)
                     {
                         tmp += mel_basis[i][k] * S[k, j];
-
-
-                        //Console.WriteLine(tmp);
                     }
                     output[i, j] = tmp;
                 }
@@ -157,7 +171,7 @@ namespace conversão_librosa{
         /// <returns></returns>
         public static double[,,] STFT(double[] y, int n_fft = 2048, int hop_length = 0, int win_length = 0, bool center = true)
         {
-
+            //Console.WriteLine("iniciando stft");
             if (win_length <= 0)
                 win_length = n_fft;
 
@@ -200,12 +214,10 @@ namespace conversão_librosa{
                 //Frames Transformados estão saindo nas linhas
                 var tmp_rfft = Spectrum.RFFT(tmp);
 
-                for (int i = 0; i < tmp_rfft.GetLength(0); i++)
+                for (int i = 0; i < stft_matrix.GetLength(0); i++)
                 {
                     for (int j = bl_s; j < bl_t; j++)
                     {
-                        //DEBUG
-                        //Console.WriteLine("["+i.ToString()+","+j.ToString()+"]   ");
                         //Parte Real
                         stft_matrix[i, j, 0] = tmp_rfft[j - bl_s].Item1[i];
                         //Parte Imaginária
@@ -213,13 +225,6 @@ namespace conversão_librosa{
                     }
                 }
             }
-            //for (int i = 0; i < stft_matrix.GetLength(0); i++)
-            //{
-            //    for (int j = 0; j < stft_matrix.GetLength(1); j++)
-            //    {
-            //        Console.WriteLine(i + " " + j + " " + S[i, j]);
-            //    }
-            //}
             return stft_matrix;
         }
 
@@ -266,6 +271,8 @@ namespace conversão_librosa{
         /// <returns></returns>
         public static double[,] _spectrogram(double[] y, ref int n_fft, double[,] S = null, int hop_length = 512, double power = 2.0, int win_length = 0, bool center = true)
         {
+            //Console.WriteLine("iniciando spectrogram");
+
             double[,] S_out;
             if (S != null)
             {
@@ -287,13 +294,6 @@ namespace conversão_librosa{
 
                 }
             }
-            //for (int i = 0; i < S_out.GetLength(0); i++)
-            //{
-            //    for (int j = 0; j < S_out.GetLength(1); j++)
-            //    {
-            //        Console.WriteLine(i + " " + j + " " + S_out[i, j]);
-            //    }
-            //}
 
             return S_out;
         }
@@ -440,7 +440,8 @@ namespace conversão_librosa{
             using (var streamReader = new StreamReader(path))
             {
                 var buffer = default(byte[]);
-                using (var memstream = new MemoryStream()){
+                using (var memstream = new MemoryStream())
+                {
                     streamReader.BaseStream.CopyTo(memstream);
                     buffer = memstream.ToArray();
                     int read = buffer.Length;
@@ -448,9 +449,13 @@ namespace conversão_librosa{
                     y = new double[sampleBuffer.Length - 22];
                     Buffer.BlockCopy(buffer, 0, sampleBuffer, 0, read);
 
-                    for (int i = 22; i < sampleBuffer.Length; i++){
+
+                    for (int i = 22; i < sampleBuffer.Length; i++)
+                    {
                         y[i - 22] = (double)sampleBuffer[i] / 32768.0;
+
                     }
+
                 }
             }
             return y;

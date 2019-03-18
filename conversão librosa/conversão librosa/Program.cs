@@ -10,8 +10,14 @@ using Librosa;
 namespace conversão_librosa{
     class Program{
         static void Main(string[] args){
+            //Console.WriteLine("Começo");
             double[] window = Util.Load2("C:/Users/dayvs/OneDrive/Documentos/NCA/Autoleitura/balanceado16PCM_14-02-2019/0/0_F_17-01-2019_19_23_36.wav");
-            int n_fft = 2048;
+            //int n_fft = 2048;
+            //var teste = Spectral.Melspectrogram(window, n_mels:20);
+            //Console.WriteLine("FIM");
+            for (int i = 0; i < window.Length; i+=20) {
+                Console.WriteLine(i+"  "+window[i]);
+            }
             Console.Read();
         }
     }
@@ -337,8 +343,7 @@ namespace conversão_librosa{
             using (var streamReader = new StreamReader(path))
             {
                 var buffer = default(byte[]);
-                using (var memstream = new MemoryStream())
-                {
+                using (var memstream = new MemoryStream()){
                     streamReader.BaseStream.CopyTo(memstream);
                     buffer = memstream.ToArray();
                     int read = buffer.Length;
@@ -346,13 +351,9 @@ namespace conversão_librosa{
                     y = new double[sampleBuffer.Length - 22];
                     Buffer.BlockCopy(buffer, 0, sampleBuffer, 0, read);
 
-
-                    for (int i = 22; i < sampleBuffer.Length; i++)
-                    {
+                    for (int i = 22; i < sampleBuffer.Length; i++){
                         y[i - 22] = (double)sampleBuffer[i] / 32768.0;
-                        i++;
                     }
-
                 }
             }
             return y;

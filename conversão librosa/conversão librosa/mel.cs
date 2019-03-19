@@ -94,6 +94,44 @@ namespace Librosa
             return subtract_outer(vet, vet);
         }
 
+        public static double maxValueOfMatrix(double[,] m)
+        {
+            double maior = -10000;
+
+            for (int i = 0; i < m.GetLength(0); i++)
+            {
+                for (int j = 0; j < m.GetLength(1); j++)
+                {
+                    if (maior < m[i, j])
+                    {
+                        maior = m[i, j];
+                    }
+                }
+            }
+            return maior;
+        }
+        public static double[,] maximum(double[,] m, double v)
+        {
+
+            double[,] mat = new double[m.GetLength(0), m.GetLength(1)];
+
+            for (int i = 0; i < m.GetLength(0); i++)
+            {
+                for (int j = 0; j < m.GetLength(1); j++)
+                {
+                    if (m[i, j] > v)
+                    {
+                        mat[i, j] = m[i, j];
+                    }
+                    else
+                    {
+                        mat[i, j] = v;
+                    }
+                }
+            }
+            return mat;
+
+        }
         public static double[] maximum(double[] a1, double[] a2)
         {
             double[] res = new double[a1.Length];
@@ -157,6 +195,45 @@ namespace Librosa
                 }
             }
             return res;
+        }
+
+        public static double minValueOfMatrix(double[,] m)
+        {
+            double menor = 300000;
+
+            for (int i = 0; i < m.GetLength(0); i++)
+            {
+                for (int j = 0; j < m.GetLength(1); j++)
+                {
+                    if (menor > m[i, j])
+                    {
+                        menor = m[i, j];
+                    }
+                }
+            }
+            return menor;
+        }
+        public static double[,] minimum(double[,] m, double v)
+        {
+
+            double[,] mat = new double[m.GetLength(0), m.GetLength(1)];
+
+            for (int i = 0; i < m.GetLength(0); i++)
+            {
+                for (int j = 0; j < m.GetLength(1); j++)
+                {
+                    if (m[i, j] < v)
+                    {
+                        mat[i, j] = m[i, j];
+                    }
+                    else
+                    {
+                        mat[i, j] = v;
+                    }
+                }
+            }
+            return mat;
+
         }
         public static double[] minimum(double[] a1, double[] a2)
         {
@@ -450,9 +527,13 @@ namespace Librosa
         /// <param name="norm"></param>
         /// <returns></returns>
         //Parametros padrão sao os definidos como "melhores"
-        public static double[][] mel(int sr = 16000, int n_fft = 2048, int n_mels = 128, double fmin = 0, bool htk = false, int norm = 1)
+        public static double[][] mel(int sr = 16000, int n_fft = 2048, int n_mels = 128, double fmin = 0, double fmax = -1, bool htk = false, int norm = 1)
         {
-            double fmax = (double)sr / 2;
+            if (fmax == -1)
+            {
+                fmax = (double)sr / 2;
+            }
+
             double[][] weights = new double[n_mels][];
 
             double[] fftfreqs = fft_frequencies().ToArray<double>();

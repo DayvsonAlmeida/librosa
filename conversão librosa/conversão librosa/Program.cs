@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Librosa;
 using FftPack;
+using MathNet.Numerics.IntegralTransforms;
+using System.Numerics;
 
 namespace LibrosaConv
 {
@@ -217,16 +219,16 @@ namespace LibrosaConv
 
 
                 //Frames Transformados estão saindo nas linhas
-                var tmp_rfft = Spectrum.RFFT(tmp);
+                var tmp_rfft = Spectrum.FFT_frames(tmp); ;//Spectrum.RFFT(tmp);
 
                 for (int i = 0; i < stft_matrix.GetLength(0); i++)
                 {
                     for (int j = bl_s; j < bl_t; j++)
                     {
                         //Parte Real
-                        stft_matrix[i, j, 0] = tmp_rfft[j - bl_s].Item1[i];
+                        stft_matrix[i, j, 0] = tmp_rfft[j - bl_s, i].Real;
                         //Parte Imaginária
-                        stft_matrix[i, j, 1] = tmp_rfft[j - bl_s].Item2[i];
+                        stft_matrix[i, j, 1] = tmp_rfft[j - bl_s, i].Magnitude;
                     }
                 }
             }
@@ -261,6 +263,22 @@ namespace LibrosaConv
             }
 
             return output;
+        }
+        private static Complex[,] FFT_frames(double[,] frames)
+        {
+            int count_frames = frames.GetLength(1);
+            int length_frames = frames.GetLength(0);
+
+            Complex[,] frame_mass_complex = new Complex[count_frames, length_frames]; //для хранения результатов FFT каждого фрейма в комплексном виде
+            Complex[] FFT_frame = new Complex[length_frames];     //спектр одного фрейма
+            for (int k = 0; k < count_frames; k++)
+            {
+                for (int i = 0; i < length_frames; i++) FFT_frame[i] = frames[i, k];
+                Fourier.Forward(FFT_frame, FourierOptions.Matlab);
+                int len_fft_frame = FFT_frame.Length;
+                for (int i = 0; i < len_fft_frame; i++) frame_mass_complex[k, i] = FFT_frame[i];
+            }
+            return frame_mass_complex;
         }
 
         /// <summary>
